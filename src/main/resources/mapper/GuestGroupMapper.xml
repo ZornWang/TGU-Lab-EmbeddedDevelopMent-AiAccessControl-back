@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.embeddedback.mapper.GuestGroupMapper">
+
+    <select id="getGuestFromGuestGroup" resultType="Guest">
+        select g.id, g.name, g.description
+        from guest_group gg
+                 left join guest g
+                           on g.id = gg.guest_id
+        where gg.guest_id = #{guestId}
+          and gg.group_id = #{groupId}
+    </select>
+
+    <select id="getAllGroupGuests" resultType="Guest">
+        select gt.id, gt.name, gt.description
+        from guest_group gg
+            left join `group` gp
+        on gp.id = gg.group_id
+            left join guest gt
+            on gg.guest_id = gt.id
+        <where>
+            gp.id = #{groupId}
+            <if test="searchGuestGroupsDto.guestId!=null">
+                and gt.id = #{searchGuestGroupsDto.guestId}
+            </if>
+            <if test="searchGuestGroupsDto.name!=null">
+                and gp.name = #{searchGuestGroupsDto.name}
+            </if>
+        </where>
+        <if test="searchGuestGroupsDto.current != null ">
+            LIMIT ${(searchGuestGroupsDto.current-1)*searchGuestGroupsDto.pageSize},${searchGuestGroupsDto.pageSize}
+        </if>
+    </select>
+
+    <select id="countGroupGuests" resultType="integer">
+        select count(*)
+        from guest_group gg
+        left join `group` gp
+        on gp.id = gg.group_id
+        left join guest gt
+        on gg.guest_id = gt.id
+        <where>
+            gp.id = #{groupId}
+            <if test="searchGuestGroupsDto.guestId!=null">
+                and gt.id = #{searchGuestGroupsDto.guestId}
+            </if>
+            <if test="searchGuestGroupsDto.name!=null">
+                and gp.name = #{searchGuestGroupsDto.name}
+            </if>
+        </where>
+    </select>
+</mapper>

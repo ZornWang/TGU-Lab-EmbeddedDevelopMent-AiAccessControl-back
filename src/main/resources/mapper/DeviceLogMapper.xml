@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.embeddedback.mapper.DeviceLogMapper">
+
+    <resultMap id="getDeviceLogMap" type="DeviceLog">
+        <result column="id" property="id"/>
+        <result column="device_id" property="deviceId"/>
+        <result column="guest_id" property="guestId"/>
+        <result column="event" property="eventStatus"/>
+        <result column="payload" property="payload"/>
+        <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
+        <association property="device" javaType="Device">
+            <result column="d_id" property="id"/>
+            <result column="d_name" property="name"/>
+        </association>
+        <association property="guest" javaType="Guest">
+            <result column="g_id" property="id"/>
+            <result column="g_name" property="name"/>
+        </association>
+    </resultMap>
+    <insert id="createLog">
+        insert into device_log
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="deviceId != null">
+                device_id,
+            </if>
+            <if test="guestId!=null">
+                guest_id,
+            </if>
+            <if test="eventStatus != null">
+                event,
+            </if>
+            <if test="payload!=null">
+                payload,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="deviceId != null">
+                #{deviceId},
+            </if>
+            <if test="guestId!=null">
+                #{guestId},
+            </if>
+            <if test="eventStatus != null">
+                #{eventStatus},
+            </if>
+            <if test="payload!=null">
+                #{payload},
+            </if>
+        </trim>
+    </insert>
+
+    <select id="getAllLog" resultMap="getDeviceLogMap">
+        select dl.*,d.id d_id,d.name d_name,g.id g_id,g.name g_name
+        from device_log dl
+        left join device d
+        on dl.device_id = d.id
+        left join guest g
+        on dl.guest_id = g.id
+        <where>
+            <if test="id != null">
+                dl.id = #{id}
+            </if>
+            <if test="guestId != null">
+                and dl.guest_id = #{guestId}
+            </if>
+            <if test="deviceId != null">
+                and dl.device_id = #{deviceId}
+            </if>
+            <if test="event != null">
+                and dl.event = #{event}
+            </if>
+        </where>
+        order by dl.id DESC
+        <if test="current != null ">
+            LIMIT ${(current-1)*pageSize},${pageSize}
+        </if>
+    </select>
+
+    <select id="countAll" resultType="Integer">
+        select count(*)
+        from device_log dl
+        left join device d
+        on dl.device_id = d.id
+        left join guest g
+        on dl.guest_id = g.id
+        <where>
+            <if test="id != null">
+                dl.id = #{id}
+            </if>
+            <if test="guestId != null">
+                and dl.guest_id = #{guestId}
+            </if>
+            <if test="deviceId != null">
+                and dl.device_id = #{deviceId}
+            </if>
+            <if test="event != null">
+                and dl.event = #{event}
+            </if>
+        </where>
+    </select>
+</mapper>

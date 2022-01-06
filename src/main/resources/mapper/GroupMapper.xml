@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.embeddedback.mapper.GroupMapper">
+    <insert id="createGroup" keyProperty="id" useGeneratedKeys="true">
+        insert
+        `group` (name,description) values (
+        #{name},
+        #{description}
+        )
+    </insert>
+
+    <update id="alterGroup">
+        update `group`
+        <set>
+            <if test="name!=null">
+                name = #{name},
+            </if>
+            <if test="description!=null">
+                description = #{description}
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <select id="getAllGroup" resultType="Group">
+        select * from `group`
+        <where>
+            <if test="id!=null">
+                id = #{id}
+            </if>
+            <if test="name!=null">
+                and name = #{name}
+            </if>
+        </where>
+        <if test="current != null ">
+            LIMIT ${(current-1)*pageSize},${pageSize}
+        </if>
+    </select>
+
+    <select id="countGroup" resultType="integer">
+        select count(*) from `group`
+        <where>
+            <if test="id!=null">
+                id = #{id}
+            </if>
+            <if test="name!=null">
+                and name = #{name}
+            </if>
+        </where>
+    </select>
+
+    <select id="getGroupByDeviceId" resultType="Group">
+        select g.id, g.name
+        from `group` g
+                 left join group_device gd
+                           on gd.group_id = g.id
+                 left join device d
+                           on d.id = gd.device_id
+        where d.id = #{deviceId}
+    </select>
+
+</mapper>

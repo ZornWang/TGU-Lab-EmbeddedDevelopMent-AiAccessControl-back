@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.embeddedback.mapper.GuestMapper">
+
+    <update id="alterGuestById">
+        update guest
+        <set>
+            <if test="name!=null">
+                name = #{name},
+            </if>
+            <if test="password!=null">
+                password = #{password},
+            </if>
+            <if test="description!=null">
+                description = #{description}
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+
+    <select id="getGroupByGuest" resultType="Group">
+        select gp.*
+        from guest_group gg
+                 LEFT JOIN guest gt
+                           on gt.id = gg.guest_id
+                 LEFT JOIN `group` gp
+                           on gg.group_id = gp.id
+        where gt.id = #{id}
+        <if test="searchGuestDto.current != null ">
+            LIMIT ${(searchGuestDto.current-1)*searchGuestDto.pageSize},${searchGuestDto.pageSize}
+        </if>
+    </select>
+
+    <select id="countGroupByGuest" resultType="integer">
+        select count(*)
+        from guest_group gg
+                 LEFT JOIN guest gt
+                           on gt.id = gg.guest_id
+                 LEFT JOIN `group` gp
+                           on gg.group_id = gp.id
+        where gt.id = #{id}
+    </select>
+
+    <select id="getAllGuest" resultType="Guest">
+        select * from guest
+        <where>
+            <if test="id!=null">
+                id = #{id}
+            </if>
+            <if test="name!=null">
+                and name = #{name}
+            </if>
+        </where>
+        <if test="current != null ">
+            LIMIT ${(current-1)*pageSize},${pageSize}
+        </if>
+    </select>
+
+    <select id="countAllGuest" resultType="integer">
+        select count(*) from guest
+        <where>
+            <if test="id!=null">
+                id = #{id}
+            </if>
+            <if test="name!=null">
+                and name = #{name}
+            </if>
+        </where>
+    </select>
+</mapper>

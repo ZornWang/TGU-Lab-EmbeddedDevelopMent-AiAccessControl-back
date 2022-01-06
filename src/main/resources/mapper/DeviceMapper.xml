@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.embeddedback.mapper.DeviceMapper">
+
+    <insert id="insertDevice" keyProperty="id" useGeneratedKeys="true">
+        insert into device(name, description, aliyun_device_name, aliyun_product_key, aliyun_device_secret,
+                           aliyun_iot_id)
+        values (#{name}, #{description}, #{aliyunDeviceName}, #{aliyunProductKey}, #{aliyunDeviceSecret},
+                #{aliyunIotId})
+    </insert>
+
+    <update id="alterDevice">
+        update device
+        <set>
+            <if test="name!=null">
+                name = #{name},
+            </if>
+            <if test="description!=null">
+                description = #{description}
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <select id="getAllDevice" resultType="Device">
+        select * from device
+        <where>
+            <if test="id != null">
+                id = #{id}
+            </if>
+            <if test="name != null">
+                and name = #{name}
+            </if>
+        </where>
+        <if test="current != null ">
+            LIMIT ${(current-1)*pageSize},${pageSize}
+        </if>
+    </select>
+
+    <select id="countAllDevice" resultType="integer">
+        select count(*) from device
+        <where>
+            <if test="id != null">
+                id = #{id}
+            </if>
+            <if test="name != null">
+                and name = #{name}
+            </if>
+        </where>
+    </select>
+
+</mapper>

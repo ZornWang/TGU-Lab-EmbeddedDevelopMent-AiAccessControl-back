@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.embeddedback.mapper.AccessMapper">
+
+    <resultMap id="GuestGroupAccessMap" type="GuestGroupAccess">
+        <result column="id" property="id"/>
+        <result column="group_id" property="guestGroupId"/>
+        <result column="device_id" property="deviceId"/>
+        <result column="acl" property="acl"/>
+        <association property="guestGroup" javaType="Group">
+            <result column="g_id" property="id"/>
+            <result column="g_name" property="name"/>
+            <result column="g_description" property="description"/>
+        </association>
+        <association property="device" javaType="Device">
+            <result column="d_id" property="id"/>
+            <result column="d_name" property="name"/>
+            <result column="d_description" property="description"/>
+            <result column="aliyun_device_name" property="aliyunDeviceName"/>
+            <result column="aliyun_product_key" property="aliyunProductKey"/>
+            <result column="aliyun_device_secret" property="aliyunDeviceSecret"/>
+            <result column="aliyun_iot_id" property="aliyunIotId"/>
+        </association>
+    </resultMap>
+
+    <resultMap id="getAccessibleMap" type="Device">
+        <result column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="description" property="description"/>
+        <result column="aliyun_device_name" property="aliyunDeviceName"/>
+        <result column="aliyun_product_key" property="aliyunProductKey"/>
+        <result column="aliyun_device_secret" property="aliyunDeviceSecret"/>
+        <result column="aliyun_iot_id" property="aliyunIotId"/>
+        <collection property="guestGroupAccess" ofType="GuestGroupAccess">
+            <result column="gd_id" property="id"/>
+            <result column="gd_group_id" property="guestGroupId"/>
+            <result column="device_id" property="deviceId"/>
+            <result column="acl" property="acl"/>
+        </collection>
+    </resultMap>
+
+
+    <select id="getAccessibleGuests" resultType="AccessibleGuests">
+        select gt.*, gd.acl
+        from group_device gd
+                 left join device d
+                           on gd.device_id = d.id
+                 left join `group` gp
+                           on gp.id = gd.group_id
+                 left join guest_group gg
+                           on gp.id = gd.group_id
+                 left join guest gt
+                           on gt.id = gg.guest_id
+        where d.id = #{id}
+    </select>
+
+    <select id="getAccessible" resultMap="getAccessibleMap">
+        select d.id,
+               d.name,
+               d.description,
+               d.aliyun_device_name,
+               d.aliyun_product_key,
+               d.aliyun_device_secret,
+               d.aliyun_iot_id,
+               gd.id       gd_id,
+               gd.group_id gd_group_id,
+               gd.device_id,
+               gd.acl
+        from device d
+            left join group_device gd
+                on gd.device_id = d.id
+            left join guest_group gg
+                on gd.group_id = gg.group_id
+            left join guest gt
+                on gg.guest_id = gt.id
+        where gt.id = #{id}
+        <if test="pageinateDto.current != null ">
+            LIMIT ${(pageinateDto.current-1)*pageinateDto.pageSize},${pageinateDto.pageSize}
+        </if>
+    </select>
+
+    <select id="countAccessible" resultType="integer">
+        select count(*)
+        from device d
+                 left join group_device gd
+                           on gd.device_id = d.id
+                 left join `group` gp
+                           on gd.group_id = gp.id
+                 left join guest_group gg
+                           on gp.id = gg.group_id
+                 left join guest gt
+                           on gg.guest_id = gt.id
+        where gt.id = #{id}
+    </select>
+
+    <select id="getAllAccess" resultMap="GuestGroupAccessMap">
+        select
+        gd.id,gd.group_id,gd.device_id,gd.acl,g.id g_id,g.name g_name,g.description g_description,
+        d.id d_id,d.name d_name,d.description
+        d_description,d.aliyun_device_name,d.aliyun_product_key,d.aliyun_device_secret,d.aliyun_iot_id
+        from group_device gd
+        left join `group` g
+        on g.id = gd.group_id
+        left join device d
+        on gd.device_id = d.id
+        <where>
+            <if test="id != null">
+                id = #{id}
+            </if>
+            <if test="deviceID != null">
+                and device_id = #{deviceID}
+            </if>
+            <if test="groupID != null">
+                and group_id = #{groupID}
+            </if>
+        </where>
+        <if test="current != null ">
+            LIMIT ${(current-1)*pageSize},${pageSize}
+        </if>
+    </select>
+
+    <select id="countAccess" resultType="integer">
+        select count(*)
+        from group_device gd
+        left join `group` g
+        on g.id = gd.group_id
+        left join device d
+        on gd.device_id = d.id
+        <where>
+            <if test="id != null">
+                gd.id = #{id}
+            </if>
+            <if test="deviceID != null">
+                and gd.device_id = #{deviceID}
+            </if>
+            <if test="groupID != null">
+                and gd.group_id = #{groupID}
+            </if>
+        </where>
+    </select>
+
+    <select id="findExistsAccess" resultType="GuestGroupAccess">
+        select *
+        from group_device
+        <where>
+            <if test="id != null">
+                id = #{id}
+            </if>
+            <if test="deviceId != null">
+                and device_id = #{deviceId}
+            </if>
+            <if test="groupId != null">
+                and group_id = #{groupId}
+            </if>
+        </where>
+    </select>
+
+    <insert id="insertAccess">
+        insert into group_device(device_id, group_id, acl)
+        values (#{deviceId}, #{groupId}, #{acl})
+    </insert>
+
+    <update id="alterAccess">
+        update group_device
+        <set>
+            <if test="deviceID!=null">
+                device_id = #{deviceID},
+            </if>
+            <if test="guestGroupId!=null">
+                group_id = #{guestGroupId},
+            </if>
+            <if test="acl!='null'">
+                acl = #{acl}
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+</mapper>
